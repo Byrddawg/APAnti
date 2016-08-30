@@ -13,7 +13,9 @@ function APA.SetBadEnt(ent,bool,ignorefrozen)
 	local phys = IsValid(ent) and ent.GetPhysicsObject and ent:GetPhysicsObject()
 
 	if bool then
+		local collisions = ent:GetCollisionGroup()
 		if (not ignorefrozen) and IsValid(phys) and not phys:IsMotionEnabled() then return end -- Don't apply on frozen entities.
+		if collisions == COLLISION_GROUP_WORLD then return end -- Don't apply on props that don't collide.
 
 		log('[BadEntity]',ent,' is now a BAD entity!') if APA.Settings.Debug:GetInt() > 0 then ent:SetColor(Color(255,0,0)) end
 
@@ -53,12 +55,16 @@ function APA.SetBadEnt(ent,bool,ignorefrozen)
 		end
 
 		ent.APAtCallback = function(ent, c)
+			local collisions = ent:GetCollisionGroup()
+
+			if collisions == COLLISION_GROUP_VEHICLE or collisions == COLLISION_GROUP_WEAPON or collisions == COLLISION_GROUP_WORLD then return false end
+			--^ Don't apply on props that don't collide with players.
+
 			local speed = c.OurOldVelocity:Length()
 
 			if speed < 8.4 then return end
 			if speed > 1000 then
-				c.HitEntity:SetPos(c.HitEntity:GetPos())
-				c.HitObject:SetPos(c.HitObject:GetPos())
+				c.HitObject:SetVelocity(c.HitObject:GetVelocity()*-speed)
 				c.HitObject:SetVelocityInstantaneous(Vector())
 			end
 
@@ -152,7 +158,7 @@ end)
 
 hook.Add( "OnEntityCreated", "APAMethod0", function(ent)
 	timer.Simple(0.001, function()
-		if IsValid(ent) and not APA.IsWorld(ent) and not APA.Settings.Method:GetBool() then
+		if IsValid(ent) and not APA.IsWorld(ent) and not ent:IsVehicle() and not APA.Settings.Method:GetBool() then
 			APA.SetBadEnt(ent,true)
 		end
 	end)

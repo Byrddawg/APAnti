@@ -65,6 +65,7 @@ function APA.physStop(phys)
 	if type(phys) == "PhysObj" then
 		phys:SetVelocityInstantaneous(Vector(0,0,0))
 		phys:AddAngleVelocity(phys:GetAngleVelocity()*-1)
+		phys:Sleep()
 	elseif isPlayer(phys) then
 		phys:SetVelocity(phys:GetVelocity()*-1)
 	else
@@ -72,6 +73,7 @@ function APA.physStop(phys)
 		if IsValid(phys) then
 			phys:SetVelocityInstantaneous(Vector(0,0,0))
 			phys:AddAngleVelocity(phys:GetAngleVelocity()*-1)
+			phys:Sleep()
 			return phys
 		end
 	end
@@ -113,16 +115,16 @@ local function DamageFilter( target, d ) -- d for damage info.
 		if APA.Settings.OnlyPlayers and not isPlayer(target) and not v.APAForceBlock then return end
 
 		if APA.WeaponCheck(attacker, inflictor) then return end
-		if APA.Settings.BlockVehicleDamage:GetBool() and isvehicle then
-			physStop(v)
+
+		if (APA.Settings.BlockVehicleDamage:GetBool() and isvehicle) or (APA.Settings.BlockExplosionDamage:GetBool() and isexplosion) then
+			d:SetDamage(0) d:ScaleDamage(0) d:SetDamageForce(Vector())
 			return true 
 		end
 
 		if (bad or (APA.Settings.BlockPropDamage:GetBool() and propdmg)) and not (good or d:IsFallDamage()) then
-			if APA.Settings.BlockExplosionDamage:GetBool() and isexplosion then return true end
 			if APA.Settings.BlockWorldDamage:GetBool() and inflictor == 'worldspawn' then return true end
 			if APA.Settings.AntiPK:GetBool() and not isvehicle and not isexplosion then 
-				d:SetDamage(0) d:ScaleDamage(0) d:SetDamageForce(Vector(0,0,0))
+				d:SetDamage(0) d:ScaleDamage(0) d:SetDamageForce(Vector())
 
 				if APA.Settings.FreezeOnHit:GetBool() or v.APAForceFreeze then
 					if damage >= 10 then
@@ -202,10 +204,12 @@ function APA.IsWorld( ent )
 	local iw = ent.IsWorld and ent:IsWorld()
 
 	if iw then return true end
-	if not ent.APAMem then return true end
 	if (ent.GetPersistent and ent:GetPersistent()) then return true end
-	if not APA.FindOwner(ent) then return true end
 	if (not ent.GetClass) then return true end
+	
+	if not ent.APAMem and not APA.FindOwner(ent) then return true end
+	if not APA.FindOwner(ent) then return true end
+
 	if ent.PhysgunDisabled or ent.NoDeleting or ent.jailWall then return true end
 	if ent.CreatedByMap and ent:CreatedByMap() then return true end
 	if isPlayer(ent) or (ent.IsNPC and ent:IsNPC()) then return true end
@@ -239,9 +243,11 @@ local function SpawnFilter(ply, model)
 			if APA.Settings.BlockVehicleDamage:GetBool() and not ent.APAVehicleCollision then
 				ent.APAVehicleCollision = function(ent, c)
 					if not APA.Settings.BlockVehicleDamage:GetBool() then return end
-					physStop(c.PhysObject)
-					physStop(c.HitEntity)
-					c.PhysObject:Sleep()
+					c.PhysObject:EnableCollisions(false)
+					timer.Simple(0, function()
+						if not IsValid(c.PhysObject) then return end
+						c.PhysObject:EnableCollisions(true)
+					end)
 				end
 				ent:AddCallback( "PhysicsCollide", ent.APAVehicleCollision )
 			end
@@ -263,8 +269,10 @@ local function PlayerSpawnFilter(ply, model, ent)
 		local phys = IsValid(ent) and ent:GetPhysicsObject()
 		if IsValid(phys) then
 			ent.APAMem.Collision = COLLISION_GROUP_NONE -- Predicted.
-			if settings_maxmass and phys:GetMass() > APA.Settings.MaxMass:GetInt() then phys:SetMass(APA.Settings.MaxMass:GetInt()) end
-			if settings_propsnocollide then ent:SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS) end
+			if not ent:IsVehicle() then 
+				if settings_maxmass and phys:GetMass() > APA.Settings.MaxMass:GetInt() then phys:SetMass(APA.Settings.MaxMass:GetInt()) end
+				if settings_propsnocollide then ent:SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS) end
+			end
 		end
 	end
 end
@@ -308,10 +316,7 @@ hook.Add( "PhysgunDrop", "APANoThrow", function(ply,ent)
 		for _,v in next, constraint.GetAllConstrainedEntities(ent) do
 			if IsValid(v) then
 				local phys = v.GetPhysicsObject and v:GetPhysicsObject() or nil
-				if IsValid(phys) then 
-					phys:SetVelocityInstantaneous(Vector(0,0,0))
-					phys:AddAngleVelocity(phys:GetAngleVelocity()*-1)
-				end
+				APA.physStop(phys)
 			end
 		end
 	end
