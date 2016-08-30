@@ -26,6 +26,7 @@ APA.Settings = {
 	UnbreakableProps        = {0, "Setting this to 1 will make props unbreakable."},
 	NoCollideVehicles       = {1, "Setting this to 1 will make vehicles not collide with players."},
 	AnnoySurf               = {1, "Setting this to 1 will make prop surf annoying."},
+	NoThrow                 = {1, "Setting this to 1 will stop people from throwing props."},
 	MaxMass                 = {1500, "This is the max weight a /spawned/ object may have. Minimum is 1, 0 Disables."},
 	--- Freezing ---
 	StopMassUnfreeze        = {1, "Setting this to 1 will stop people from unfreezing all their props by double tapping R."},
@@ -35,6 +36,8 @@ APA.Settings = {
 	FreezeOnUnghost         = {1, "Setting this to 1 will freeze props when they unghost."},
 	FreezePassive           = {0, "Setting this to 1 will freeze props passivly."},
 	--- Ghosting ---
+	GhostPickup             = {1, "Setting this to 1 will enable ghosting props on pickup."},
+	GhostSpawn              = {1, "Setting this to 1 will enable ghosting on spawn."},
 	GhostFreeze             = {0, "Setting this to 1 will freeze ghosts."},
 	UnGhostPassive          = {0, "Setting this to 1 will passivly unghost props. (Needs AntiPush.)"},
 	GhostsNoCollide         = {0, "Setting this to 1 will make ghosts nocollide with everything."},
