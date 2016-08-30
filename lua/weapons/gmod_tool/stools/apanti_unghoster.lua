@@ -21,8 +21,7 @@ function TOOL:LeftClick( trace )
 end
 
 function TOOL:RightClick( trace )
-	return false -- Disabled for now.
-	
+--[[	
 	if CLIENT then return true end
 
 	if not IsValid( trace.Entity ) then return false end
@@ -38,11 +37,11 @@ function TOOL:RightClick( trace )
 	end
 
 	return true
+--]]
 end
 
 function TOOL:Reload( trace )
-	return false -- Disabled for now.
-
+--[[
 	if CLIENT then return true end
 
 	local o = self:GetOwner()
@@ -62,4 +61,5 @@ function TOOL:Reload( trace )
 		end
 		return true
 	end
+--]]
 end
