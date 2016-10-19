@@ -253,9 +253,13 @@ hook.Add("PlayerUnfrozeObject", "APAntiGhostR", function(ply,ent,phys)
 end)
 
 hook.Add("CanProperty", "APA.CanPropertyFix", function( ply, property, ent )
-	if( tostring(property) == "collision" and ent.APGhost ) then
-		APA.Notify(ply, "Cannot Set Property on Ghost.", NOTIFY_ERROR, 4, 0)
-		return false 
+	if( tostring(property) == "collision" then
+		if ent.APGhost then
+			APA.Notify(ply, "Cannot Set Property on Ghost.", NOTIFY_ERROR, 4, 0)
+		elseif APA.Settings.BlockVehicleDamage:GetBool() and ent.APAVehicleCollision then
+			APA.Notify(ply, "Cannot Set Property on a Vehicle while Block Vehicle Damage is enabled.", NOTIFY_ERROR, 5, 0)
+		end
+		return false
 	end
 end)
 
