@@ -240,6 +240,7 @@ local function SpawnFilter(ply, model)
 			if APA.Settings.NoCollideVehicles:GetBool() then 
 				ent:SetCollisionGroup(COLLISION_GROUP_WEAPON)
 			end
+			--[[--
 			if APA.Settings.BlockVehicleDamage:GetBool() and not ent.APAVehicleCollision then
 				ent.APAVehicleCollision = function(ent, c)
 					if not APA.Settings.BlockVehicleDamage:GetBool() then return end
@@ -251,6 +252,7 @@ local function SpawnFilter(ply, model)
 				end
 				ent:AddCallback( "PhysicsCollide", ent.APAVehicleCollision )
 			end
+			--]]--
 		end
 	end)
 end
