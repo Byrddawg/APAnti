@@ -86,6 +86,14 @@ local function DamageFilter( target, d ) -- d for damage info.
 
 	local isvehicle = (attacker:IsVehicle() or inflictor:IsVehicle())
 	local isexplosion = d:IsExplosionDamage()
+	
+	if attacker.APADropDamageTick or inflictor.APADropDamageTick then
+		timer.Simple(0, function()
+			attacker.APADropDamageTick = nil
+			inflictor.APADropDamageTick = nil
+		end)
+		return true 
+	end
 
 	local targetClass = IsValid(target) and target.GetClass and target:GetClass() or nil
 	if string.find(string.lower(targetClass), "prop_") == 1 and APA.Settings.UnbreakableProps:GetBool() then return true end
@@ -240,19 +248,14 @@ local function SpawnFilter(ply, model)
 			if APA.Settings.NoCollideVehicles:GetBool() then 
 				ent:SetCollisionGroup(COLLISION_GROUP_WEAPON)
 			end
-			--[[--
 			if APA.Settings.BlockVehicleDamage:GetBool() and not ent.APAVehicleCollision then
 				ent.APAVehicleCollision = function(ent, c)
 					if not APA.Settings.BlockVehicleDamage:GetBool() then return end
-					c.PhysObject:EnableCollisions(false)
-					timer.Simple(0, function()
-						if not IsValid(c.PhysObject) then return end
-						c.PhysObject:EnableCollisions(true)
-					end)
+					c.HitEntity.APADropDamageTick = true
+					if isPlayer(c.HitEntity) then APA.physStop(c.HitEntity) end
 				end
 				ent:AddCallback( "PhysicsCollide", ent.APAVehicleCollision )
 			end
-			--]]--
 		end
 	end)
 end
